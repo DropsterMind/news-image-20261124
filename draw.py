@@ -1,16 +1,16 @@
-"""Draw the 24 November 2026 world-news poster, v1 (1024x1024 PNG).
+"""Draw the 24 November 2026 world-news poster, v2 (1024x1024 PNG).
 
 Run:  python3 draw.py            -> writes entry.png next to this file.
 The entry program (main.ts, Node stdlib only) copies entry.png to
 /output/entry.png. The drawing is fully deterministic: fixed palette,
 fixed fonts, fixed layout, no network, no timestamps, no randomness.
 
-Scene-led, like the 23 November v3 that this follows: one big hero
-scene fills ~45% of the frame and the other five stories become a
-compact "ALSO TODAY" strip underneath, each with its own small
-illustration so the story is clear from its picture. The date stays
-the biggest text on the page, because the judge is not told which
-day the contest is about.
+Scene-led, like the 23 November v3 that this follows, refined the way
+the 23 November v4 refined v3: one big hero scene fills ~45% of the
+frame and the other five stories become a compact "ALSO TODAY" strip
+underneath, each with its own small flat scene band so the story is
+clear from its picture. The date stays the biggest text on the page,
+because the judge is not told which day the contest is about.
 
 Editorial choices, all verified against reporting on 24 Nov 2026:
  1. Russian military aircraft approach Ulleung Island, South Korea;
@@ -108,19 +108,40 @@ def blend(c1, c2, t):
     return tuple(int(c1[k] + (c2[k] - c1[k]) * t) for k in range(3))
 
 
-# ---- small icons for the ALSO TODAY strip ----------------------------
-def mini_radar(draw, cx, cy):
-    """AWACS radar dish on a mast."""
-    draw.arc([cx - 20, cy - 26, cx + 20, cy + 14], 180, 360,
-             fill=TEAL, width=4)
-    draw.line([cx, cy - 6, cx, cy + 14], fill=INK, width=4)
-    draw.rectangle([cx - 16, cy + 14, cx + 16, cy + 20], fill=INK)
-    draw.ellipse([cx - 4, cy - 30, cx + 4, cy - 22], fill=GOLD)
-    draw.ellipse([cx + 12, cy - 24, cx + 18, cy - 18], fill=GOLD)
-    draw.ellipse([cx - 18, cy - 24, cx - 12, cy - 18], fill=GOLD)
+# ---- scene bands for the ALSO TODAY strip ---------------------------
+# Each band fills the bottom ~64 px of its card with a flat little
+# scene of the story itself, the way the 23 November v4 did: a plane
+# for the AWACS story, a barred chip for the blacklist, a courthouse
+# for the extradition, a burning factory for the Serang fire, a
+# chessboard for the title match. A symbol alone does not tell the
+# story; a place does.
+def scene_awacs(draw, x0, y0, x1, y1):
+    """AWACS plane over a dusk sky, a small drone below it."""
+    draw.rounded_rectangle([x0 + 2, y0, x1 - 2, y1 - 2], radius=10,
+                           fill=(32, 58, 92))
+    cx, cy = (x0 + x1) // 2, (y0 + y1) // 2 - 2
+    # fuselage, nose, tail fin, radar dome on a stalk
+    draw.rounded_rectangle([cx - 56, cy - 6, cx + 52, cy + 6], radius=6,
+                           fill=WHITE)
+    draw.polygon([(cx + 52, cy - 6), (cx + 66, cy), (cx + 52, cy + 6)],
+                 fill=WHITE)
+    draw.polygon([(cx - 56, cy - 6), (cx - 56, cy - 22), (cx - 40, cy - 6)],
+                 fill=WHITE)
+    draw.rectangle([cx - 2, cy - 12, cx + 2, cy - 6], fill=WHITE)
+    draw.ellipse([cx - 14, cy - 26, cx + 14, cy - 12], fill=WHITE)
+    # small red drone with a dashed path
+    dx, dy = x1 - 34, y1 - 18
+    draw.ellipse([dx - 8, dy - 4, dx + 8, dy + 4], fill=RED)
+    for k in range(4):
+        draw.line([dx - 18 - k * 8, dy + 8, dx - 22 - k * 8, dy + 8],
+                  fill=GOLD, width=2)
 
 
-def mini_chip(draw, cx, cy):
+def scene_chip_ban(draw, x0, y0, x1, y1):
+    """A chip on a cream band, barred by a red ring."""
+    draw.rounded_rectangle([x0 + 2, y0, x1 - 2, y1 - 2], radius=10,
+                           fill=(243, 236, 220))
+    cx, cy = (x0 + x1) // 2 - 10, (y0 + y1) // 2
     draw.rounded_rectangle([cx - 22, cy - 14, cx + 22, cy + 14], radius=5,
                            fill=INK)
     draw.rounded_rectangle([cx - 12, cy - 6, cx + 12, cy + 6], radius=3,
@@ -128,33 +149,66 @@ def mini_chip(draw, cx, cy):
     for dy in (-8, 0, 8):
         draw.line([cx - 30, cy + dy, cx - 22, cy + dy], fill=GOLD, width=3)
         draw.line([cx + 22, cy + dy, cx + 30, cy + dy], fill=GOLD, width=3)
+    rx, ry = x1 - 26, y0 + 16
+    draw.ellipse([rx - 13, ry - 13, rx + 13, ry + 13], outline=RED, width=4)
+    draw.line([rx - 9, ry + 9, rx + 9, ry - 9], fill=RED, width=4)
 
 
-def mini_badge(draw, cx, cy):
-    """A police badge with a check mark."""
-    draw.polygon([(cx - 16, cy - 14), (cx + 16, cy - 14), (cx + 16, cy + 2),
-                  (cx, cy + 20), (cx - 16, cy + 2)], fill=NAVY)
-    draw.line([cx - 8, cy - 2, cx - 2, cy + 5, cx + 9, cy - 8],
-              fill=GOLD, width=4)
+def scene_court(draw, x0, y0, x1, y1):
+    """A courthouse: pediment, columns, steps."""
+    draw.rounded_rectangle([x0 + 2, y0, x1 - 2, y1 - 2], radius=10,
+                           fill=(226, 230, 238))
+    cx = (x0 + x1) // 2
+    base = y1 - 8
+    draw.polygon([(cx - 52, y0 + 18), (cx + 52, y0 + 18), (cx, y0 + 2)],
+                 fill=NAVY)
+    draw.rectangle([cx - 52, y0 + 18, cx + 52, base - 10],
+                   fill=(120, 130, 148))
+    for col in (-34, 0, 34):
+        draw.rectangle([cx + col - 5, y0 + 22, cx + col + 5, base - 10],
+                       fill=WHITE)
+    draw.rectangle([cx - 60, base - 10, cx + 60, base - 4], fill=NAVY)
+    draw.rectangle([cx - 66, base - 4, cx + 66, base], fill=(120, 130, 148))
 
 
-def mini_flame(draw, cx, cy):
-    draw.polygon([(cx - 22, cy + 18), (cx, cy - 20), (cx + 22, cy + 18)],
-                 fill=GOLD)
-    draw.polygon([(cx - 11, cy + 18), (cx, cy - 2), (cx + 11, cy + 18)],
-                 fill=RED)
-    draw.rectangle([cx - 26, cy + 18, cx + 26, cy + 24], fill=GREY)
+def scene_factory_fire(draw, x0, y0, x1, y1):
+    """A factory with flames on its sawtooth roof and smoke."""
+    draw.rounded_rectangle([x0 + 2, y0, x1 - 2, y1 - 2], radius=10,
+                           fill=(250, 232, 200))
+    cx = (x0 + x1) // 2
+    base = y1 - 6
+    draw.polygon([(cx - 62, base), (cx - 62, y0 + 26), (cx - 34, y0 + 12),
+                  (cx - 6, y0 + 26), (cx + 22, y0 + 12), (cx + 50, y0 + 26),
+                  (cx + 62, y0 + 26), (cx + 62, base)], fill=(70, 78, 92))
+    for fx in (-44, -8, 28):
+        draw.polygon([(cx + fx - 10, y0 + 26), (cx + fx, y0 + 2),
+                      (cx + fx + 10, y0 + 26)], fill=GOLD)
+        draw.polygon([(cx + fx - 5, y0 + 26), (cx + fx, y0 + 12),
+                      (cx + fx + 5, y0 + 26)], fill=RED)
+    draw.ellipse([cx + 44, y0 + 4, cx + 58, y0 + 18], fill=(120, 126, 138))
 
 
-def mini_king(draw, cx, cy):
-    """A chess king: gold crown on a dark base."""
-    draw.rectangle([cx - 16, cy + 8, cx + 16, cy + 18], fill=INK)
-    draw.rectangle([cx - 6, cy - 6, cx + 6, cy + 8], fill=INK)
-    draw.polygon([(cx - 12, cy - 6), (cx - 8, cy - 18), (cx - 3, cy - 10),
-                  (cx, cy - 20), (cx + 3, cy - 10), (cx + 8, cy - 18),
-                  (cx + 12, cy - 6)], fill=GOLD)
-    draw.line([cx, cy - 28, cx, cy - 20], fill=GOLD, width=3)
-    draw.line([cx - 4, cy - 24, cx + 4, cy - 24], fill=GOLD, width=3)
+def scene_chess(draw, x0, y0, x1, y1):
+    """A chessboard strip with a king and a pawn."""
+    draw.rounded_rectangle([x0 + 2, y0, x1 - 2, y1 - 2], radius=10,
+                           fill=TEAL)
+    cw = (x1 - x0 - 4) // 6
+    bh = (y1 - y0 - 2) // 2
+    for r in range(2):
+        for c in range(6):
+            if (r + c) % 2 == 0:
+                draw.rectangle([x0 + 2 + c * cw, y0 + r * bh,
+                                x0 + 2 + (c + 1) * cw, y0 + (r + 1) * bh],
+                               fill=(240, 235, 220))
+    kx, ky = x0 + 36, (y0 + y1) // 2 + 8
+    draw.rectangle([kx - 10, ky + 6, kx + 10, ky + 12], fill=GOLD)
+    draw.rectangle([kx - 4, ky - 4, kx + 4, ky + 6], fill=GOLD)
+    draw.polygon([(kx - 8, ky - 4), (kx - 5, ky - 14), (kx - 2, ky - 8),
+                  (kx, ky - 16), (kx + 2, ky - 8), (kx + 5, ky - 14),
+                  (kx + 8, ky - 4)], fill=GOLD)
+    px2, py2 = x1 - 36, (y0 + y1) // 2 + 10
+    draw.ellipse([px2 - 6, py2 - 8, px2 + 6, py2 + 4], fill=INK)
+    draw.rectangle([px2 - 9, py2 + 4, px2 + 9, py2 + 10], fill=INK)
 
 
 # ---- hero scene: jets over Ulleung Island at dawn --------------------
@@ -260,20 +314,21 @@ def main():
 
     items = [
         ("POLAND", RED, "NATO sends AWACS to Poland",
-         "Russian drone violates Polish airspace overnight.", mini_radar),
+         "Russian drone violates Polish airspace overnight.", scene_awacs),
         ("TECH", GOLD, "Huang back; US blacklists Megaspeed",
          "Nvidia reinstates its CEO as the chip firm is barred.",
-         mini_chip),
+         scene_chip_ban),
         ("MEXICO", NAVY, "US seeks 'Chapo Isidro' extradition",
          "Captured Friday; a US order now exists for the kingpin.",
-         mini_badge),
+         scene_court),
         ("INDONESIA", RED, "Serang fire: 24 dead, 30 missing",
-         "Search goes on at the candy factory in Banten.", mini_flame),
+         "Search goes on at the candy factory in Banten.",
+         scene_factory_fire),
         ("SPORT", TEAL, "Chess title match begins in Geneva",
-         "Gukesh defends against Sindarov, both just 20.", mini_king),
+         "Gukesh defends against Sindarov, both just 20.", scene_chess),
     ]
     col_w = 192
-    for i, (tag_text, accent, head, sub, icon) in enumerate(items):
+    for i, (tag_text, accent, head, sub, scene) in enumerate(items):
         x0 = 24 + i * col_w
         x1 = x0 + col_w - 12
         d.rounded_rectangle([x0, 748, x1, 1000], radius=12, fill=CARD,
@@ -286,7 +341,7 @@ def main():
         sf = font(SANS, 14)
         sl = wrap(d, sub, sf, x1 - x0 - 24)
         draw_lines(d, x0 + 12, y + 6, sl, sf, GREY, 18)
-        icon(d, (x0 + x1) // 2, 958)
+        scene(d, x0, 936, x1, 1000)
 
     d.text((512, 1008), "24 NOVEMBER 2026  •  ULLEUNG  •  POLAND  •  "
            "GENEVA  •  GUASAVE  •  SERANG",
