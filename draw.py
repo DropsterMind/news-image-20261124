@@ -1,4 +1,4 @@
-"""Draw the 24 November 2026 world-news poster, v2 (1024x1024 PNG).
+"""Draw the 24 November 2026 world-news poster, v3 (1024x1024 PNG).
 
 Run:  python3 draw.py            -> writes entry.png next to this file.
 The entry program (main.ts, Node stdlib only) copies entry.png to
@@ -11,6 +11,14 @@ frame and the other five stories become a compact "ALSO TODAY" strip
 underneath, each with its own small flat scene band so the story is
 clear from its picture. The date stays the biggest text on the page,
 because the judge is not told which day the contest is about.
+
+v3 (round 1 ranked v2 1320 of 7,302, top ~18%): the hero jets are
+bigger and the radar arcs thicker — the round-1 audit found the
+island dominating the hero while the jets were small and the arcs
+thin. Everything else, hero, strip and wording, stays as in v2.
+The arcs sweep right toward the jets and stay inside the hero
+scene: the first version's up-right arcs crossed the sub-headline
+text, so the sweep was redrawn after QA.
 
 Editorial choices, all verified against reporting on 24 Nov 2026:
  1. Russian military aircraft approach Ulleung Island, South Korea;
@@ -245,12 +253,17 @@ def hero_dawn(draw, x0, y0, x1, y1):
     draw.arc([px - 14, py - 34, px + 14, py - 6], 180, 360,
              fill=WHITE, width=3)
     draw.ellipse([px - 4, py - 38, px + 4, py - 30], fill=RED)
-    for r in (58, 98, 138):
-        draw.arc([px - r, py - 20 - r, px + r, py - 20 + r], 295, 350,
-                 fill=GOLD, width=3)
-    # two fighter jets with white contrails
-    jets = [(x0 + 640, horizon - 96, 1.0, 1), (x0 + 800, horizon - 110,
-                                                0.6, -1)]
+    # radar arcs sweep right, toward the jets, and stay inside the
+    # hero scene (an up-right sweep crosses the sub-headline text)
+    for r in (60, 100, 140):
+        draw.arc([px - r, py - 20 - r, px + r, py - 20 + r], 340, 360,
+                 fill=GOLD, width=5)
+        draw.arc([px - r, py - 20 - r, px + r, py - 20 + r], 0, 30,
+                 fill=GOLD, width=5)
+    # two fighter jets with white contrails, bigger than in v2 so the
+    # island no longer dominates the hero
+    jets = [(x0 + 640, horizon - 96, 1.45, 1), (x0 + 800, horizon - 110,
+                                                1.0, -1)]
     for jx, jy, s, facing in jets:
         pts = [(jx + 30 * s * facing, jy),
                (jx + 6 * s * facing, jy - 5 * s),
