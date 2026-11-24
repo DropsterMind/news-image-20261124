@@ -185,15 +185,18 @@ def hero_dawn(draw, x0, y0, x1, y1):
     draw.polygon([(x0 + 250, horizon - 78), (x0 + 300, horizon - 66),
                   (x0 + 330, horizon - 84), (x0 + 330, horizon + 150),
                   (x0 + 250, horizon + 150)], fill=(44, 62, 88))
-    # radar sweep arcs from the island peak
+    # a small radar station on the island peak, sweeping the sky
     px, py = x0 + 300, horizon - 70
+    draw.line([px, py, px, py - 20], fill=WHITE, width=3)
+    draw.arc([px - 14, py - 34, px + 14, py - 6], 180, 360,
+             fill=WHITE, width=3)
+    draw.ellipse([px - 4, py - 38, px + 4, py - 30], fill=RED)
     for r in (58, 98, 138):
-        draw.arc([px - r, py - r, px + r, py + r], 295, 350,
+        draw.arc([px - r, py - 20 - r, px + r, py - 20 + r], 295, 350,
                  fill=GOLD, width=3)
-    draw.ellipse([px - 5, py - 5, px + 5, py + 5], fill=GOLD)
     # two fighter jets with white contrails
-    jets = [(x0 + 640, horizon - 96, 1.0, 1), (x0 + 830, horizon - 40,
-                                                0.7, -1)]
+    jets = [(x0 + 640, horizon - 96, 1.0, 1), (x0 + 800, horizon - 110,
+                                                0.6, -1)]
     for jx, jy, s, facing in jets:
         pts = [(jx + 30 * s * facing, jy),
                (jx + 6 * s * facing, jy - 5 * s),
